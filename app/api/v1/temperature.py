@@ -32,7 +32,7 @@ async def add_temperature(
         logger.error(f"Error adding temperature data: {e}")
         raise HTTPException(status_code=500, detail="Failed to add temperature data.")
 
-@router.get("/average")
+@router.get("/average", summary="Get Average Temperature", description="Fetch the 15-minute average temperature for a building and room.")
 async def fetch_average_temperature(
     query: TemperatureQuery = Depends(),
     db: AsyncSession = Depends(get_db)
