@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql.functions import func
 from sqlalchemy.exc import SQLAlchemyError
-from db.models import Temperature
+from db.models import Temperature, AvgTemperature
 import logging
 
 logger = logging.getLogger("uvicorn")
@@ -20,9 +21,12 @@ async def insert_temperature(
     Converts offset-aware datetime to naive before insertion.
     """
     try:
-        # Ensure timestamp is naive
-        if timestamp.tzinfo is not None:
-            timestamp = timestamp.replace(tzinfo=None)
+        # Ensure timestamp is timezone-aware
+        if timestamp.tzinfo is None:
+            raise ValueError("Timestamp must be timezone-aware.")
+        
+        # Convert timestamp to UTC
+        timestamp = timestamp.astimezone(timezone.utc)
 
         new_temp = Temperature(
             building_id=building_id,
@@ -42,19 +46,30 @@ async def get_average_temperature(
     db: AsyncSession,
     building_id: str,
     room_id: str,
-    start_time: datetime
+    start_time: Optional[datetime] = None
 ) -> float:
     """
-    Retrieves the average temperature for a building and room since the given time.
+    Retrieves the average temperature for a building and room from the continuous aggregate view.
+    If start_time is not provided, returns the last available average.
     """
     try:
-        stmt = select(func.avg(Temperature.temperature)).where(
-            Temperature.building_id == building_id,
-            Temperature.room_id == room_id,
-            Temperature.timestamp >= start_time
-        )
+        if start_time is not None:
+            # Query the average over the specified time range
+            stmt = select(func.avg(AvgTemperature.avg_temp)).where(
+                AvgTemperature.building_id == building_id,
+                AvgTemperature.room_id == room_id,
+                AvgTemperature.bucket >= start_time,
+            )
+        else:
+            # Get the latest avg_temp from the most recent bucket
+            stmt = select(AvgTemperature.avg_temp).where(
+                AvgTemperature.building_id == building_id,
+                AvgTemperature.room_id == room_id,
+            ).order_by(AvgTemperature.bucket.desc()).limit(1)
+
         result = await db.execute(stmt)
         avg_temp = result.scalar()
+
         logger.info(f"Average temperature queried: {avg_temp} for {building_id}, {room_id}")
         return avg_temp
     except SQLAlchemyError as e:

@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -10,3 +11,4 @@ class TemperatureRequest(BaseModel):
 class TemperatureQuery(BaseModel):
     building_id: str
     room_id: str
+    query_datetime: Optional[datetime] = None
