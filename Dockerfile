@@ -6,9 +6,9 @@ WORKDIR /app
 # Set PYTHONPATH to include the current directory
 ENV PYTHONPATH=/app
 
-# Install tzdata and PostgreSQL client tools
+# Install tzdata, PostgreSQL client tools, and curl
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends tzdata postgresql-client && \
+    apt-get install -y --no-install-recommends tzdata postgresql-client curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the timezone environment variable

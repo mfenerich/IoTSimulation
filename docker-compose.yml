@@ -11,6 +11,12 @@ services:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/temperature_service
     depends_on:
       - postgres
+    healthcheck:
+      test: curl --fail http://localhost:8000/health || exit 1
+      interval: 1m
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   postgres:
     image: timescale/timescaledb:latest-pg16
@@ -24,6 +30,20 @@ services:
       PGTZ: UTC
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m simulation.runner
+    entrypoint: []
+    environment:
+      - API_URL=http://api:8000/v1/temperature/
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ./app:/app
 
 volumes:
   postgres_data:
