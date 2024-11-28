@@ -1,10 +1,11 @@
 from api.v1.schemas import TemperatureRequest, TemperatureQuery
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from db.connection import get_db
 from db.queries import insert_temperature, get_average_temperature
 from datetime import datetime, timedelta
 import logging
+from core.dependencies import get_dependencies
+
 
 logger = logging.getLogger("uvicorn")
 
@@ -13,7 +14,7 @@ router = APIRouter()
 @router.post("/")
 async def add_temperature(
     temperature_data: TemperatureRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_dependencies)
 ):
     """
     API endpoint to add temperature data.
@@ -35,7 +36,7 @@ async def add_temperature(
 @router.get("/average", summary="Get Average Temperature", description="Fetch the 15-minute average temperature for a building and room.")
 async def fetch_average_temperature(
     query: TemperatureQuery = Depends(),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_dependencies)
 ):
     """
     API endpoint to fetch the average temperature for the last 15 minutes.
