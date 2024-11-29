@@ -9,7 +9,7 @@ Schemas:
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 
 class TemperatureRequest(BaseModel):
@@ -32,6 +32,8 @@ class TemperatureRequest(BaseModel):
         ..., description="Time of measurement (ISO 8601 format)"
     )
 
+    model_config = ConfigDict(validate_assignment=True)
+
 
 class TemperatureQuery(BaseModel):
     """
@@ -51,12 +53,11 @@ class TemperatureQuery(BaseModel):
     )
     query_datetime: Optional[datetime] = Field(
         None,
-        description=(
-            "Datetime for querying temperature " "(optional, defaults to current time)"
-        ),
+        description="Datetime for querying temperature (optional, defaults to current time)",
     )
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def validate_fields(cls, values):
         """Validate and adjust the query fields if necessary."""
         if not values.get("building_id") or not values.get("room_id"):
