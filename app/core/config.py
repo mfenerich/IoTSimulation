@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     api_url: str = "http://localhost:8000/v1/temperature/"
     timezone: str = "Europe/Zurich"
     data_interval: int = 5  # Interval between data points in seconds
+    postgres_user: str
+    postgres_password: str
 
     class Config:
         """
