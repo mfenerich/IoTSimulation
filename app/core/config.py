@@ -5,6 +5,7 @@ The configuration is loaded from environment variables and supports default valu
 """
 
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict 
 
 
 class Settings(BaseSettings):
@@ -31,14 +32,8 @@ class Settings(BaseSettings):
     postgres_user: str
     postgres_password: str
 
-    class Config:
-        """
-        Configuration class for Pydantic BaseSettings.
-
-        Specifies the environment file from which settings should be loaded.
-        """
-
-        env_file = ".env"
+    # Use ConfigDict for configuration
+    model_config = ConfigDict(env_file=".env")
 
 
 settings = Settings()
