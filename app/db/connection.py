@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
+from core.config import settings  # Import settings for database configuration
 
-DATABASE_URL = "postgresql+asyncpg://postgres:password@postgres:5432/temperature_service"
+# Fetch the database URL from environment variables
+DATABASE_URL = settings.database_url
 
 # Create an async engine
 engine = create_async_engine(DATABASE_URL, echo=True)
