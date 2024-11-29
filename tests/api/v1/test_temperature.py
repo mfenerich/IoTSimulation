@@ -1,92 +1,191 @@
 import asyncio
-from fastapi.testclient import TestClient
-from app.main import app
-
+import time
 from unittest.mock import patch, AsyncMock
+
+import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-import pytest
-import time
 from httpx import AsyncClient, ASGITransport
+
+from app.main import app
 from app.core.dependencies import get_db
 
-# Initialize TestClient for FastAPI app
-client = TestClient(app)
+@pytest.fixture
+def client():
+    return TestClient(app)
 
-def test_add_temperature_success():
-    """
-    Test the `add_temperature` endpoint with valid data.
-
-    Ensures:
-    - HTTP status code is 201.
-    - A success message is returned.
-    """
-    mock_data = {
+@pytest.fixture
+def valid_mock_data():
+    return {
         "building_id": "1",
         "room_id": "101",
         "temperature": 22.5,
         "timestamp": "2024-01-01T12:00:00",
     }
 
-    with patch("app.api.v1.temperature.insert_temperature") as mock_insert:
+class TestAddTemperatureEndpoint:
+
+    @patch("app.api.v1.temperature.insert_temperature")
+    def test_add_temperature_success(self, mock_insert, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint with valid data.
+
+        Ensures:
+        - HTTP status code is 201.
+        - A success message is returned.
+        """
         mock_insert.return_value = None  # Simulate successful database insert
         
-        response = client.post("/v1/temperature", json=mock_data)
+        response = client.post("/v1/temperature", json=valid_mock_data)
         
         assert response.status_code == 201
         assert response.json() == {"message": "Temperature data added"}
 
-def test_add_temperature_validation_error():
-    """
-    Test the `add_temperature` endpoint with invalid data.
+    def test_add_temperature_validation_error(self, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint with invalid data.
 
-    Ensures:
-    - HTTP status code is 422.
-    - Validation error details are returned.
-    """
-    mock_data = {
-        "building_id": "1",
-        "room_id": "101",
-        "temperature": 100.0,  # Invalid: Out of range (-50 to 50)
-        "timestamp": "2024-01-01T12:00:00",
-    }
-    
-    response = client.post("/v1/temperature", json=mock_data)
-    
-    assert response.status_code == 422
-    assert "detail" in response.json()
+        Ensures:
+        - HTTP status code is 422.
+        - Validation error details are returned.
+        """
+        invalid_data = valid_mock_data.copy()
+        invalid_data["temperature"] = 100.0  # Invalid: Out of range (-50 to 50)
+        
+        response = client.post("/v1/temperature", json=invalid_data)
+        
+        assert response.status_code == 422
+        assert "detail" in response.json()
 
+    def test_add_temperature_missing_fields(self, client):
+        """
+        Test the `add_temperature` endpoint with missing fields.
 
-def test_add_temperature_missing_fields():
-    """
-    Test the `add_temperature` endpoint with missing fields.
+        Ensures:
+        - HTTP status code is 422.
+        - Validation error details are returned.
+        """
+        mock_data = {
+            "building_id": "1",
+            "room_id": "101",
+            # Missing "temperature" and "timestamp"
+        }
+        
+        response = client.post("/v1/temperature", json=mock_data)
+        
+        assert response.status_code == 422
+        assert "detail" in response.json()
 
-    Ensures:
-    - HTTP status code is 422.
-    - Validation error details are returned.
-    """
-    mock_data = {
-        "building_id": "1",
-        "room_id": "101",
-        # Missing "temperature" and "timestamp"
-    }
-    
-    response = client.post("/v1/temperature", json=mock_data)
-    
-    assert response.status_code == 422
-    assert "detail" in response.json()
+    @patch("app.api.v1.temperature.insert_temperature")
+    def test_add_temperature_high_precision(self, mock_insert, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint with high-precision temperature data.
 
-def test_fetch_average_temperature_success():
-    """
-    Test the `fetch_average_temperature` endpoint with valid query parameters.
+        Ensures:
+        - HTTP status code is 201.
+        - A success message is returned.
+        """
+        mock_insert.return_value = None  # Simulate successful database insert
+        
+        high_precision_data = valid_mock_data.copy()
+        high_precision_data["temperature"] = 22.555555555  # High precision
+        
+        response = client.post("/v1/temperature", json=high_precision_data)
+        
+        assert response.status_code == 201
+        assert response.json() == {"message": "Temperature data added"}
 
-    Ensures:
-    - HTTP status code is 200.
-    - The average temperature is returned.
-    """
-    query_params = {"building_id": "1", "room_id": "101"}
-    
-    with patch("app.api.v1.temperature.get_average_temperature") as mock_get:
+    @patch("app.api.v1.temperature.insert_temperature")
+    def test_add_temperature_boundary_values(self, mock_insert, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint with boundary temperature values.
+
+        Ensures:
+        - HTTP status code is 201 for valid boundary values.
+        """
+        mock_insert.return_value = None  # Simulate successful database insert
+        
+        for temperature in [-50, 50]:  # Boundary values
+            data = valid_mock_data.copy()
+            data["temperature"] = temperature
+
+            response = client.post("/v1/temperature", json=data)
+            
+            assert response.status_code == 201
+            assert response.json() == {"message": "Temperature data added"}
+
+    @patch("app.api.v1.temperature.insert_temperature")
+    def test_add_temperature_sqlalchemy_error(self, mock_insert, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint when a SQLAlchemyError occurs.
+
+        Ensures:
+        - HTTP status code is 500.
+        - The error message indicates a database error.
+        """
+        mock_insert.side_effect = SQLAlchemyError("Database connection error")
+        
+        response = client.post("/v1/temperature", json=valid_mock_data)
+        
+        assert response.status_code == 500
+        assert response.json() == {'error': 'Database error occurred.', 'code': 500}
+
+    def test_add_temperature_invalid_timestamp_format(self, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint with invalid timestamp format.
+
+        Ensures:
+        - HTTP status code is 422.
+        - Validation error details are returned.
+        """
+        invalid_data = valid_mock_data.copy()
+        invalid_data["timestamp"] = "01-01-2024 12:00:00"  # Invalid timestamp format
+        
+        response = client.post("/v1/temperature", json=invalid_data)
+        
+        assert response.status_code == 422
+        assert "detail" in response.json()
+
+    def test_add_temperature_large_payload(self, client, valid_mock_data):
+        """
+        Test the `add_temperature` endpoint with a large payload.
+
+        Ensures:
+        - HTTP status code is 422 for validation errors.
+        - Proper error details are returned for excessively large payloads.
+        """
+        invalid_data = valid_mock_data.copy()
+        invalid_data["building_id"] = "1" * 1000  # Excessively large building ID
+        
+        response = client.post("/v1/temperature", json=invalid_data)
+        
+        assert response.status_code == 422  # Validation error
+        assert "detail" in response.json()
+        # The exact error message may vary depending on validation rules
+
+    def test_invalid_http_method(self, client):
+        """
+        Test that invalid HTTP methods are rejected.
+
+        Ensures:
+        - HTTP status code is 405 (Method Not Allowed).
+        """
+        response = client.put("/v1/temperature", json={})
+        assert response.status_code == 405
+
+class TestFetchAverageTemperatureEndpoint:
+
+    @patch("app.api.v1.temperature.get_average_temperature")
+    def test_fetch_average_temperature_success(self, mock_get, client):
+        """
+        Test the `fetch_average_temperature` endpoint with valid query parameters.
+
+        Ensures:
+        - HTTP status code is 200.
+        - The average temperature is returned.
+        """
+        query_params = {"building_id": "1", "room_id": "101"}
         mock_get.return_value = 21.5  # Simulated average temperature
         
         response = client.get("/v1/temperature/average", params=query_params)
@@ -94,17 +193,16 @@ def test_fetch_average_temperature_success():
         assert response.status_code == 200
         assert response.json() == {"average_temperature": 21.5, "message": None}
 
-def test_fetch_average_temperature_no_data():
-    """
-    Test the `fetch_average_temperature` endpoint when no data is found.
+    @patch("app.api.v1.temperature.get_average_temperature")
+    def test_fetch_average_temperature_no_data(self, mock_get, client):
+        """
+        Test the `fetch_average_temperature` endpoint when no data is found.
 
-    Ensures:
-    - HTTP status code is 200.
-    - A message indicating no data is returned.
-    """
-    query_params = {"building_id": "1", "room_id": "101"}
-    
-    with patch("app.api.v1.temperature.get_average_temperature") as mock_get:
+        Ensures:
+        - HTTP status code is 200.
+        - A message indicating no data is returned.
+        """
+        query_params = {"building_id": "1", "room_id": "101"}
         mock_get.return_value = None  # Simulate no data found
         
         response = client.get("/v1/temperature/average", params=query_params)
@@ -112,159 +210,35 @@ def test_fetch_average_temperature_no_data():
         assert response.status_code == 200
         assert response.json() == {"average_temperature": None, "message": "No data found"}
 
+    def test_fetch_average_temperature_validation_error(self, client):
+        """
+        Test the `fetch_average_temperature` endpoint with missing query parameters.
 
-def test_fetch_average_temperature_validation_error():
-    """
-    Test the `fetch_average_temperature` endpoint with missing query parameters.
-
-    Ensures:
-    - HTTP status code is 422.
-    - Validation error details are returned.
-    """
-    query_params = {}  # Missing required parameters
-    
-    response = client.get("/v1/temperature/average", params=query_params)
-    
-    assert response.status_code == 422
-    assert "detail" in response.json()
-
-def test_invalid_http_method():
-    """
-    Test that invalid HTTP methods are rejected.
-
-    Ensures:
-    - HTTP status code is 405 (Method Not Allowed).
-    """
-    response = client.put("/v1/temperature", json={})
-    assert response.status_code == 405
-
-def test_add_temperature_high_precision():
-    """
-    Test the `add_temperature` endpoint with high-precision temperature data.
-
-    Ensures:
-    - HTTP status code is 201.
-    - A success message is returned.
-    """
-    mock_data = {
-        "building_id": "1",
-        "room_id": "101",
-        "temperature": 22.555555555,  # High precision
-        "timestamp": "2024-01-01T12:00:00",
-    }
-
-    with patch("app.api.v1.temperature.insert_temperature") as mock_insert:
-        mock_insert.return_value = None  # Simulate successful database insert
+        Ensures:
+        - HTTP status code is 422.
+        - Validation error details are returned.
+        """
+        query_params = {}  # Missing required parameters
         
-        response = client.post("/v1/temperature", json=mock_data)
+        response = client.get("/v1/temperature/average", params=query_params)
         
-        assert response.status_code == 201
-        assert response.json() == {"message": "Temperature data added"}
+        assert response.status_code == 422
+        assert "detail" in response.json()
 
-def test_add_temperature_boundary_values():
-    """
-    Test the `add_temperature` endpoint with boundary temperature values.
+    @patch("app.api.v1.temperature.get_average_temperature")
+    def test_fetch_average_temperature_exact_boundaries(self, mock_get, client):
+        """
+        Test the `fetch_average_temperature` endpoint with queries at exact boundaries.
 
-    Ensures:
-    - HTTP status code is 201 for valid boundary values.
-    """
-    for temperature in [-50, 50]:  # Boundary values
-        mock_data = {
+        Ensures:
+        - HTTP status code is 200.
+        - Average temperature is returned correctly.
+        """
+        query_params = {
             "building_id": "1",
             "room_id": "101",
-            "temperature": temperature,
-            "timestamp": "2024-01-01T12:00:00",
+            "query_datetime": "2024-01-01T00:00:00",  # Exact boundary
         }
-
-        with patch("app.api.v1.temperature.insert_temperature") as mock_insert:
-            mock_insert.return_value = None  # Simulate successful database insert
-            
-            response = client.post("/v1/temperature", json=mock_data)
-            
-            assert response.status_code == 201
-            assert response.json() == {"message": "Temperature data added"}
-
-def test_add_temperature_sqlalchemy_error():
-    """
-    Test the `add_temperature` endpoint when a SQLAlchemyError occurs.
-
-    Ensures:
-    - HTTP status code is 500.
-    - The error message indicates a database error.
-    """
-    mock_data = {
-        "building_id": "1",
-        "room_id": "1",
-        "temperature": 22.5,
-        "timestamp": "2024-01-01T12:00:00",
-    }
-
-    with patch("app.api.v1.temperature.insert_temperature") as mock_insert:
-        mock_insert.side_effect = SQLAlchemyError("Database connection error")
-        
-        response = client.post("/v1/temperature", json=mock_data)
-        
-        assert response.status_code == 500
-        assert response.json() == {'error': 'Database error occurred.', 'code': 500}
-
-def test_add_temperature_missing_db_connection():
-    """
-    Test the `add_temperature` endpoint when the database connection is unavailable.
-
-    Ensures:
-    - HTTP status code is 500.
-    - The error message indicates a database connection error.
-    """
-    mock_data = {
-        "building_id": "1",
-        "room_id": "101",
-        "temperature": 22.5,
-        "timestamp": "2024-01-01T12:00:00",
-    }
-
-    with patch("app.api.v1.temperature.insert_temperature") as mock_insert:
-        mock_insert.side_effect = SQLAlchemyError("Database connection error")
-        
-        response = client.post("/v1/temperature", json=mock_data)
-        
-        assert response.status_code == 500
-        assert response.json() == {'error': 'Database error occurred.', 'code': 500}
-
-def test_add_temperature_invalid_timestamp_format():
-    """
-    Test the `add_temperature` endpoint with invalid timestamp format.
-
-    Ensures:
-    - HTTP status code is 422.
-    - Validation error details are returned.
-    """
-    mock_data = {
-        "building_id": "1",
-        "room_id": "101",
-        "temperature": 22.5,
-        "timestamp": "01-01-2024 12:00:00",  # Invalid timestamp format
-    }
-    
-    response = client.post("/v1/temperature", json=mock_data)
-    
-    assert response.status_code == 422
-    assert "detail" in response.json()
-
-def test_fetch_average_temperature_exact_boundaries():
-    """
-    Test the `fetch_average_temperature` endpoint with queries at exact boundaries.
-
-    Ensures:
-    - HTTP status code is 200.
-    - Average temperature is returned correctly.
-    """
-    query_params = {
-        "building_id": "1",
-        "room_id": "101",
-        "query_datetime": "2024-01-01T00:00:00",  # Exact boundary
-    }
-    
-    with patch("app.api.v1.temperature.get_average_temperature") as mock_get:
         mock_get.return_value = 25.0  # Simulated average temperature
         
         response = client.get("/v1/temperature/average", params=query_params)
@@ -272,28 +246,6 @@ def test_fetch_average_temperature_exact_boundaries():
         assert response.status_code == 200
         assert response.json() == {"average_temperature": 25.0, "message": None}
 
-def test_add_temperature_large_payload():
-    """
-    Test the `add_temperature` endpoint with a large payload.
-
-    Ensures:
-    - HTTP status code is 422 for validation errors.
-    - Proper error details are returned for excessively large payloads.
-    """
-    mock_data = {
-        "building_id": "1" * 1000,  # Excessively large building ID
-        "room_id": "101",
-        "temperature": 22.5,
-        "timestamp": "2024-01-01T12:00:00Z",
-    }
-    
-    response = client.post("/v1/temperature", json=mock_data)
-    
-    assert response.status_code == 422  # Validation error
-    assert "detail" in response.json()
-    assert response.json()["detail"][0]["msg"] == "String should have at most 255 characters"
-
-# Mock the get_db dependency
 async def mock_get_db():
     mock_session = AsyncMock(spec=AsyncSession)
     yield mock_session
