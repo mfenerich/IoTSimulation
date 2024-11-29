@@ -46,11 +46,11 @@ async def fetch_average_temperature(
         if start_time is None:
             now = datetime.now()
             # Calculate the minutes to subtract to align to the nearest 15-minute interval
-            minutes_to_subtract = now.minute % 15
+            minutes_to_subtract = now.minute % 4
             # Align to the nearest 15-minute interval
             aligned_time = now - timedelta(minutes=minutes_to_subtract, seconds=now.second, microseconds=now.microsecond)
             # Subtract an additional 15 minutes to get the previous interval
-            start_time = aligned_time - timedelta(minutes=15)
+            start_time = aligned_time - timedelta(minutes=4)
         logger.warning("0000000000000000000");
         logger.warning(start_time);
         avg_temp = await get_average_temperature(

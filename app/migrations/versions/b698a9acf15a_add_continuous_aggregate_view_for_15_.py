@@ -24,7 +24,7 @@ def upgrade() -> None:
     conn.execute(text("""
         CREATE MATERIALIZED VIEW avg_temperature_15min
         WITH (timescaledb.continuous) AS
-        SELECT time_bucket('15 minutes', timestamp) AS bucket,
+        SELECT time_bucket('2 minutes', timestamp) AS bucket,
                building_id,
                room_id,
                AVG(temperature) AS avg_temp
@@ -37,7 +37,7 @@ def upgrade() -> None:
     conn.execute(text("""
     SELECT add_continuous_aggregate_policy('avg_temperature_15min',
         start_offset => INTERVAL '1 hour',
-        end_offset => INTERVAL '1 minute',
+        end_offset => INTERVAL '10 seconds',
         schedule_interval => INTERVAL '5 seconds');
     """))
 
