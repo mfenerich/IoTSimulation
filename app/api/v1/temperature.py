@@ -49,13 +49,13 @@ async def add_temperature(
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred. Reference ID: {incident_id}")
 
 
-@router.get("/average", summary="Get Average Temperature", description="Fetch the 15-minute average temperature for a building and room.")
+@router.get("/average", summary="Get Average Temperature", description="Fetch the X-minute average temperature for a building and room.")
 async def fetch_average_temperature(
     query: TemperatureQuery = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Fetch the average temperature for the last 15 minutes.
+    Fetch the average temperature for the last X minutes.
 
     Args:
         query (TemperatureQuery): Query parameters.

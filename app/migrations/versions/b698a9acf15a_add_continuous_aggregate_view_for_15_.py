@@ -1,8 +1,7 @@
-"""Add continuous aggregate view for 15-minute averages
+"""Add continuous aggregate view for X-minute averages
 
 Revision ID: b698a9acf15a
 Revises: 55ec7006783b
-Create Date: 2024-11-28 15:17:34.268452
 
 """
 from typing import Sequence, Union
@@ -22,7 +21,7 @@ def upgrade() -> None:
 
     # Create the continuous aggregate materialized view without data
     conn.execute(text("""
-        CREATE MATERIALIZED VIEW avg_temperature_15min
+        CREATE MATERIALIZED VIEW avg_temperature_time_interval
         WITH (timescaledb.continuous) AS
         SELECT time_bucket('2 minutes', timestamp) AS bucket,
                building_id,
@@ -35,7 +34,7 @@ def upgrade() -> None:
 
     # Add a policy to refresh the view periodically
     conn.execute(text("""
-    SELECT add_continuous_aggregate_policy('avg_temperature_15min',
+    SELECT add_continuous_aggregate_policy('avg_temperature_time_interval',
         start_offset => INTERVAL '1 hour',
         end_offset => INTERVAL '10 seconds',
         schedule_interval => INTERVAL '5 seconds');
@@ -43,4 +42,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     conn = op.get_bind()
-    conn.execute(text("DROP MATERIALIZED VIEW IF EXISTS avg_temperature_15min;"))
+    conn.execute(text("DROP MATERIALIZED VIEW IF EXISTS avg_temperature_time_interval;"))

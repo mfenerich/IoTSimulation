@@ -14,7 +14,7 @@ class Temperature(Base):
     timestamp = Column(PG_TIMESTAMP(timezone=True), nullable=False)
 
 class AvgTemperature(Base):
-    __tablename__ = "avg_temperature_15min"
+    __tablename__ = "avg_temperature_time_interval"
 
     bucket = Column(PG_TIMESTAMP(timezone=True), primary_key=True, nullable=False)
     building_id = Column(String, primary_key=True, nullable=False)

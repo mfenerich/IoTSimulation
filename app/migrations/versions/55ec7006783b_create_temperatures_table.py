@@ -1,8 +1,7 @@
 """Create temperatures table
 
 Revision ID: 55ec7006783b
-Revises: 
-Create Date: 2024-11-28 10:28:26.487617
+Revises:
 
 """
 from typing import Sequence, Union
