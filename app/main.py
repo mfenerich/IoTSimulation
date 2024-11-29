@@ -6,6 +6,7 @@ handles exceptions, and configures event hooks for startup and shutdown.
 """
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -14,6 +15,16 @@ from app.api.v1.temperature import router as temperature_router
 from app.core.config import settings
 from app.core.logging_config import logger
 from app.response_models import SettingsResponse
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context for FastAPI to handle startup and shutdown events."""
+    # Startup logic
+    logger.info("Starting FastAPI IoT Simulation Service")
+    yield
+    # Shutdown logic
+    logger.info("Shutting down FastAPI IoT Simulation Service")
+
 
 app = FastAPI(
     title="IoT Temperature API",
@@ -35,19 +46,8 @@ app = FastAPI(
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT",
     },
+    lifespan=lifespan,  # Register the lifespan context
 )
-
-
-@app.on_event("startup")
-async def startup():
-    """Log the startup of the FastAPI IoT Simulation Service."""
-    logger.info("Starting FastAPI IoT Simulation Service")
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    """Log the shutdown of the FastAPI IoT Simulation Service."""
-    logger.info("Shutting down FastAPI IoT Simulation Service")
 
 
 @app.get("/health", tags=["Health"])
