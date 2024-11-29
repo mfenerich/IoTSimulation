@@ -1,21 +1,39 @@
 from api.v1.schemas import TemperatureRequest, TemperatureQuery
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from db.queries import insert_temperature, get_average_temperature
 from datetime import datetime
 from core.dependencies import get_db
 from core.utils import align_time_to_interval
+from response_models import AddTemperatureResponse, AverageTemperatureResponse
 import logging
 import uuid
 
 logger = logging.getLogger("uvicorn")
 
-router = APIRouter(
-    tags=["Temperature Management"]
-)
+# Router setup
+router = APIRouter()
 
-@router.post("/", response_model=dict, status_code=201, summary="Add Temperature Data")
+@router.post(
+    "/",
+    response_model=AddTemperatureResponse,
+    status_code=201,
+    summary="Add Temperature Data",
+    description="""
+    Save temperature data for a specific building and room.
+
+    This endpoint accepts the following fields:
+    - `building_id`: The ID of the building.
+    - `room_id`: The ID of the room.
+    - `temperature`: The temperature reading (must be between -50 and 50 degrees Celsius).
+    - `timestamp`: ISO8601 formatted timestamp of the temperature reading.
+
+    Returns:
+    - A success message when the data is saved successfully.
+    """,
+)
 async def add_temperature(
     temperature_data: TemperatureRequest,
     db: AsyncSession = Depends(get_db)
@@ -49,7 +67,22 @@ async def add_temperature(
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred. Reference ID: {incident_id}")
 
 
-@router.get("/average", summary="Get Average Temperature", description="Fetch the X-minute average temperature for a building and room.")
+@router.get(
+    "/average",
+    response_model=AverageTemperatureResponse,
+    summary="Get Average Temperature",
+    description="""
+    Fetch the average temperature over a specified time period for a building and room.
+
+    Query Parameters:
+    - `building_id`: The ID of the building.
+    - `room_id`: The ID of the room.
+    - `query_datetime`: Optional. The datetime for the query (defaults to the current time).
+
+    Returns:
+    - The average temperature for the specified time period, or a message if no data is found.
+    """,
+)
 async def fetch_average_temperature(
     query: TemperatureQuery = Depends(),
     db: AsyncSession = Depends(get_db)
