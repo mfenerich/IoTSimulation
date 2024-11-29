@@ -31,7 +31,6 @@ async def health_check():
 # Include Temperature Router
 app.include_router(temperature_router, prefix="/v1/temperature", tags=["Temperature"])
 
-
 # Custom exception handler for HTTP exceptions
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
