@@ -1,3 +1,10 @@
+"""
+Runner script for the temperature simulation.
+
+This module initializes and runs the simulation for multiple buildings
+and rooms concurrently using asyncio.
+"""
+
 import asyncio
 from simulation.simulator import generate_temperature_data
 
@@ -8,15 +15,18 @@ BUILDINGS_AND_ROOMS = [
     ("B2", "201"),
 ]
 
+
 async def run_simulation():
-    """
-    Run simulation for multiple buildings and rooms.
-    """
+    """Run the simulation for multiple buildings and rooms concurrently."""
     # Generate tasks for all buildings and rooms
-    tasks = [generate_temperature_data(building, room) for building, room in BUILDINGS_AND_ROOMS]
+    tasks = [
+        generate_temperature_data(building, room)
+        for building, room in BUILDINGS_AND_ROOMS
+    ]
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
+
 
 if __name__ == "__main__":
     asyncio.run(run_simulation())

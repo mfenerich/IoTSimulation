@@ -1,5 +1,13 @@
+"""
+Utility functions for the FastAPI application.
+
+This module provides shared utilities, such as time alignment logic,
+to be reused across the application.
+"""
+
 from datetime import datetime, timedelta
 from core.config import settings
+
 
 def align_time_to_interval(now: datetime, interval: int = None) -> datetime:
     """
@@ -7,7 +15,8 @@ def align_time_to_interval(now: datetime, interval: int = None) -> datetime:
 
     Args:
         now (datetime): The current datetime.
-        interval (int): The alignment interval in minutes. Defaults to settings.alignment_interval.
+        interval (int): The alignment interval in minutes.
+            Defaults to settings.alignment_interval.
 
     Returns:
         datetime: The aligned datetime, subtracting the interval.

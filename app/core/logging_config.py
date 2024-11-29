@@ -1,3 +1,5 @@
+"""This module defines the logging configuration for the application."""
+
 import logging
 
 logging.basicConfig(

@@ -1,6 +1,13 @@
+"""
+This module defines the API endpoints for managing temperature data.
+
+Endpoints:
+- `add_temperature`: Save temperature data for a building and room.
+- `fetch_average_temperature`: Get the average temperature over a specified time period.
+"""
+
 from api.v1.schemas import TemperatureRequest, TemperatureQuery
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from db.queries import insert_temperature, get_average_temperature
@@ -16,6 +23,11 @@ logger = logging.getLogger("uvicorn")
 # Router setup
 router = APIRouter()
 
+# Module-level defaults
+default_db_dependency = Depends(get_db)
+default_query_dependency = Depends()
+
+
 @router.post(
     "/",
     response_model=AddTemperatureResponse,
@@ -27,7 +39,8 @@ router = APIRouter()
     This endpoint accepts the following fields:
     - `building_id`: The ID of the building.
     - `room_id`: The ID of the room.
-    - `temperature`: The temperature reading (must be between -50 and 50 degrees Celsius).
+    - `temperature`: The temperature reading
+        (must be between -50 and 50 degrees Celsius).
     - `timestamp`: ISO8601 formatted timestamp of the temperature reading.
 
     Returns:
@@ -35,8 +48,7 @@ router = APIRouter()
     """,
 )
 async def add_temperature(
-    temperature_data: TemperatureRequest,
-    db: AsyncSession = Depends(get_db)
+    temperature_data: TemperatureRequest, db: AsyncSession = default_db_dependency
 ):
     """
     Save temperature data for a specific building and room.
@@ -56,7 +68,10 @@ async def add_temperature(
             temperature=temperature_data.temperature,
             timestamp=temperature_data.timestamp,
         )
-        logger.info(f"Temperature data added for Building ID: {temperature_data.building_id}, Room ID: {temperature_data.room_id}")
+        logger.info(
+            f"Temperature data added for Building ID: {temperature_data.building_id}, "
+            f"Room ID: {temperature_data.room_id}"
+        )
         return {"message": "Temperature data added"}
     except SQLAlchemyError as e:
         logger.error(f"Database error while adding temperature: {e}")
@@ -64,7 +79,10 @@ async def add_temperature(
     except Exception as e:
         incident_id = str(uuid.uuid4())
         logger.error(f"Incident {incident_id}: Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred. Reference ID: {incident_id}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred. Reference ID: {incident_id}",
+        )
 
 
 @router.get(
@@ -77,15 +95,17 @@ async def add_temperature(
     Query Parameters:
     - `building_id`: The ID of the building.
     - `room_id`: The ID of the room.
-    - `query_datetime`: Optional. The datetime for the query (defaults to the current time).
+    - `query_datetime`: Optional. The datetime for the query
+        (defaults to the current time).
 
     Returns:
-    - The average temperature for the specified time period, or a message if no data is found.
+    - The average temperature for the specified time period,
+        or a message if no data is found.
     """,
 )
 async def fetch_average_temperature(
-    query: TemperatureQuery = Depends(),
-    db: AsyncSession = Depends(get_db)
+    query: TemperatureQuery = default_query_dependency,
+    db: AsyncSession = default_db_dependency,
 ):
     """
     Fetch the average temperature for the last X minutes.
@@ -108,10 +128,16 @@ async def fetch_average_temperature(
             db, query.building_id, query.room_id, start_time
         )
         if avg_temp is None:
-            logger.info(f"No temperature data found for Building ID: {query.building_id}, Room ID: {query.room_id}")
+            logger.info(
+                f"No temperature data found for Building ID: {query.building_id}, "
+                f"Room ID: {query.room_id}"
+            )
             return {"message": "No data found"}
 
-        logger.info(f"Average temperature for Building ID: {query.building_id}, Room ID: {query.room_id}, Start Time: {start_time} is {avg_temp}")
+        logger.info(
+            f"Average temperature for Building ID: {query.building_id}, "
+            f"Room ID: {query.room_id}, Start Time: {start_time} is {avg_temp}"
+        )
         return {"average_temperature": avg_temp}
     except SQLAlchemyError as e:
         logger.error(f"Database error while fetching average temperature: {e}")
@@ -119,4 +145,7 @@ async def fetch_average_temperature(
     except Exception as e:
         incident_id = str(uuid.uuid4())
         logger.error(f"Incident {incident_id}: Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred. Reference ID: {incident_id}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred. Reference ID: {incident_id}",
+        )
