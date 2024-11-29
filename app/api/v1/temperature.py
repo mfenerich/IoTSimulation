@@ -7,6 +7,7 @@ Endpoints:
 """
 
 import logging
+import traceback
 import uuid
 from datetime import datetime
 
@@ -147,6 +148,7 @@ async def fetch_average_temperature(
     except Exception as e:
         incident_id = str(uuid.uuid4())
         logger.error(f"Incident {incident_id}: Unexpected error: {e}")
+        logger.error(traceback.format_exc())  # Log the full stack trace
         raise HTTPException(
             status_code=500,
             detail=f"An unexpected error occurred. Reference ID: {incident_id}",

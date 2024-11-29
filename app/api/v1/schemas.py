@@ -23,8 +23,12 @@ class TemperatureRequest(BaseModel):
         timestamp (datetime): Time of measurement (ISO 8601 format).
     """
 
-    building_id: str = Field(..., description="ID of the building")
-    room_id: str = Field(..., description="ID of the room within the building")
+    building_id: str = Field(
+        ..., max_length=255, description="ID of the building (max 255 characters)"
+    )
+    room_id: str = Field(
+        ..., max_length=255, description="ID of the room within the building (max 255 characters)"
+    )
     temperature: float = Field(
         ..., description="Measured temperature in Celsius", ge=-50, le=50
     )
@@ -35,21 +39,22 @@ class TemperatureRequest(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
 
+
 class TemperatureQuery(BaseModel):
     """
     Schema for querying temperature data.
 
     Attributes:
-        building_id (str): ID of the building (non-empty).
-        room_id (str): ID of the room within the building (non-empty).
+        building_id (str): ID of the building (non-empty, max 255 characters).
+        room_id (str): ID of the room within the building (non-empty, max 255 characters).
         query_datetime (Optional[datetime]): Datetime for querying temperature.
     """
 
     building_id: str = Field(
-        ..., min_length=1, description="ID of the building (non-empty)"
+        ..., min_length=1, max_length=255, description="ID of the building (non-empty, max 255 characters)"
     )
     room_id: str = Field(
-        ..., min_length=1, description="ID of the room within the building (non-empty)"
+        ..., min_length=1, max_length=255, description="ID of the room within the building (non-empty, max 255 characters)"
     )
     query_datetime: Optional[datetime] = Field(
         None,
@@ -65,3 +70,4 @@ class TemperatureQuery(BaseModel):
                 "Both building_id and room_id must be provided and non-empty."
             )
         return values
+
