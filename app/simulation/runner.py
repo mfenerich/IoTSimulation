@@ -6,6 +6,7 @@ and rooms concurrently using asyncio.
 """
 
 import asyncio
+
 from app.simulation.simulator import generate_temperature_data
 
 # Define buildings and rooms for the simulation

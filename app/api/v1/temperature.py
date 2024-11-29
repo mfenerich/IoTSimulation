@@ -6,17 +6,19 @@ Endpoints:
 - `fetch_average_temperature`: Get the average temperature over a specified time period.
 """
 
-from app.api.v1.schemas import TemperatureRequest, TemperatureQuery
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
-from app.db.queries import insert_temperature, get_average_temperature
-from datetime import datetime
-from app.core.dependencies import get_db
-from app.core.utils import align_time_to_interval
-from app.response_models import AddTemperatureResponse, AverageTemperatureResponse
 import logging
 import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.schemas import TemperatureQuery, TemperatureRequest
+from app.core.dependencies import get_db
+from app.core.utils import align_time_to_interval
+from app.db.queries import get_average_temperature, insert_temperature
+from app.response_models import AddTemperatureResponse, AverageTemperatureResponse
 
 logger = logging.getLogger("uvicorn")
 

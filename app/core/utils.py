@@ -6,16 +6,18 @@ to be reused across the application.
 """
 
 from datetime import datetime, timedelta
+from typing import Optional  # Import Optional
+
 from app.core.config import settings
 
 
-def align_time_to_interval(now: datetime, interval: int = None) -> datetime:
+def align_time_to_interval(now: datetime, interval: Optional[int] = None) -> datetime:
     """
     Align the given time to the nearest interval.
 
     Args:
         now (datetime): The current datetime.
-        interval (int): The alignment interval in minutes.
+        interval (Optional[int]): The alignment interval in minutes.
             Defaults to settings.alignment_interval.
 
     Returns:

@@ -6,7 +6,7 @@ This module defines the SQLAlchemy ORM models used for database tables, includin
 - `AvgTemperature`: Stores average temperature values over time intervals.
 """
 
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Float, Integer, String
 from sqlalchemy.dialects.postgresql import TIMESTAMP as PG_TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 

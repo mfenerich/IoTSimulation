@@ -5,13 +5,15 @@ This module provides functions for inserting temperature records
 and retrieving average temperature data.
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
+
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.exc import SQLAlchemyError
-from app.db.models import Temperature, AvgTemperature
-import logging
+
+from app.db.models import AvgTemperature, Temperature
 
 logger = logging.getLogger("uvicorn")
 

@@ -4,8 +4,9 @@ Pydantic response models for the FastAPI application.
 These models define the structure of API responses for various endpoints.
 """
 
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class AddTemperatureResponse(BaseModel):

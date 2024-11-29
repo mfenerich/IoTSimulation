@@ -6,8 +6,10 @@ and defines functions to run migrations in both online and offline modes.
 """
 
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+
 from app.db.models import Base
 
 # This is the Alembic Config object, which provides access to the .ini file in use.

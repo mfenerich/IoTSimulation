@@ -5,9 +5,9 @@ This module configures the database engine and provides a dependency
 for retrieving an asynchronous database session.
 """
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
+
 from app.core.config import settings
 
 # Create the database engine

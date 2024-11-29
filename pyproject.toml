@@ -31,7 +31,7 @@ requests = "2.32.3"
 ruff = "0.6.1"
 
 [tool.ruff]
-exclude = [".venv"]
+exclude = [".venv", "**/migrations/**", "**/__init__.py"]
 
 [tool.ruff.lint]
 select = [
