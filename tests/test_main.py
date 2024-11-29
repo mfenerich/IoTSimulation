@@ -1,20 +1,27 @@
 """
 Test suite for FastAPI IoT API.
 
-This module contains tests for the health and settings endpoints of the FastAPI application.
+This module contains tests for the health and settings endpoints of the
+    FastAPI application.
 
 Tests:
 - `test_read_item`: Validates the `/health` endpoint for basic functionality.
-- `test_get_settings`: Validates the `/settings` endpoint for correctness of application settings.
-- `test_health_response_time`: Ensures the `/health` endpoint responds within an acceptable time frame.
-- `test_health_content_type`: Verifies that the `/health` endpoint returns the correct content type.
-- `test_health_stress`: Simulates multiple requests to the `/health` endpoint to test stability under load.
+- `test_get_settings`: Validates the `/settings` endpoint for correctness of
+    application settings.
+- `test_health_response_time`: Ensures the `/health` endpoint responds within an
+    acceptable time frame.
+- `test_health_content_type`: Verifies that the `/health` endpoint returns the
+    correct content type.
+- `test_health_stress`: Simulates multiple requests to the `/health` endpoint to
+    test stability under load.
 """
 
-from fastapi.testclient import TestClient
-from app.main import app
-from app.core.config import settings
 import time
+
+from fastapi.testclient import TestClient
+
+from app.core.config import settings
+from app.main import app
 
 # Initialize TestClient for FastAPI app
 client = TestClient(app)
@@ -43,10 +50,10 @@ def test_get_settings():
     """
     # Make a GET request to the `/settings` endpoint
     response = client.get("/settings")
-    
+
     # Assert that the status code is 200
     assert response.status_code == 200
-    
+
     # Validate the response data
     expected_response = {
         "app_name": settings.app_name,
@@ -66,7 +73,7 @@ def test_health_response_time():
     start_time = time.time()
     response = client.get("/health")
     end_time = time.time()
-    
+
     assert response.status_code == 200
     assert (end_time - start_time) < 0.2  # Response should take less than 200ms
 
@@ -97,6 +104,7 @@ def test_health_stress():
         response = client.get("/health")
         assert response.status_code == 200
 
+
 def test_http_exception_handler():
     """
     Test the custom HTTPException handler.
@@ -105,6 +113,4 @@ def test_http_exception_handler():
     """
     response = client.get("/v1/temperature/some-invalid-endpoint")
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Not Found"
-    }
+    assert response.json() == {"detail": "Not Found"}

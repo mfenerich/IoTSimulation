@@ -13,7 +13,7 @@ repos:
         entry: ruff check
         language: python
         types_or: [python, pyi]
-        args: ["--config", "pyproject.toml", "--force-exclude"]
+        args: ["--config", "pyproject.toml", "--force-exclude", "--fix"]
         require_serial: true
       - id: ruff-format
         name: ruff-format

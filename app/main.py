@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.logging_config import logger
 from app.response_models import SettingsResponse
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context for FastAPI to handle startup and shutdown events."""

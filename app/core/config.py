@@ -4,8 +4,8 @@ This module defines the application configuration using Pydantic's BaseSettings.
 The configuration is loaded from environment variables and supports default values.
 """
 
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict 
 
 
 class Settings(BaseSettings):
