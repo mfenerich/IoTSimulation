@@ -55,7 +55,7 @@ async def get_average_temperature(
     try:
         if start_time is not None:
             # Query the average over the specified time range
-            stmt = select(func.avg(AvgTemperature.avg_temp)).where(
+            stmt = select(AvgTemperature.avg_temp).where(
                 AvgTemperature.building_id == building_id,
                 AvgTemperature.room_id == room_id,
                 AvgTemperature.bucket >= start_time,
