@@ -8,7 +8,7 @@ for retrieving an asynchronous database session.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
-from core.config import settings
+from app.core.config import settings
 
 # Create the database engine
 DATABASE_URL = settings.database_url

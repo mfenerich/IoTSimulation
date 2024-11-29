@@ -7,11 +7,11 @@ handles exceptions, and configures event hooks for startup and shutdown.
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from api.v1.temperature import router as temperature_router
-from core.config import settings
+from app.api.v1.temperature import router as temperature_router
+from app.core.config import settings
 import logging
-from core.logging_config import logger
-from response_models import SettingsResponse
+from app.core.logging_config import logger
+from app.response_models import SettingsResponse
 
 app = FastAPI(
     title="IoT Temperature API",

@@ -11,7 +11,7 @@ import datetime
 import logging
 import pytz
 import requests
-from core.config import settings
+from app.core.config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

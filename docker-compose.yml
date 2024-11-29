@@ -35,7 +35,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python -m simulation.runner
+    command: python -m app.simulation.runner
     entrypoint: []
     env_file:
       - .env

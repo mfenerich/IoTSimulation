@@ -6,7 +6,7 @@ to be reused across the application.
 """
 
 from datetime import datetime, timedelta
-from core.config import settings
+from app.core.config import settings
 
 
 def align_time_to_interval(now: datetime, interval: int = None) -> datetime:

@@ -5,7 +5,7 @@ Use these dependencies across routes or components to manage common requirements
 such as database connections.
 """
 
-from db.connection import get_db
+from app.db.connection import get_db
 from fastapi import Depends
 
 # Module-level variable to fix B008

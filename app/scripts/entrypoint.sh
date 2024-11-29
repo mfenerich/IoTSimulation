@@ -15,4 +15,4 @@ alembic upgrade head
 >&2 echo "Migrations applied - starting server"
 
 # Start the FastAPI server
-exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+exec uvicorn --workers 1 --host 0.0.0.0 --port $APPLICATION_SERVER_PORT app.main:app

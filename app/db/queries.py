@@ -10,7 +10,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
-from db.models import Temperature, AvgTemperature
+from app.db.models import Temperature, AvgTemperature
 import logging
 
 logger = logging.getLogger("uvicorn")
