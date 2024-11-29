@@ -37,8 +37,8 @@ services:
       dockerfile: Dockerfile
     command: python -m simulation.runner
     entrypoint: []
-    environment:
-      - API_URL=http://api:8000/v1/temperature/
+    env_file:
+      - .env
     depends_on:
       api:
         condition: service_healthy

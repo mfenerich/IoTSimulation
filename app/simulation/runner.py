@@ -1,15 +1,19 @@
 import asyncio
 from simulation.simulator import generate_temperature_data
 
+# Define buildings and rooms for the simulation
+BUILDINGS_AND_ROOMS = [
+    ("B1", "101"),
+    ("B1", "102"),
+    ("B2", "201"),
+]
+
 async def run_simulation():
     """
     Run simulation for multiple buildings and rooms.
     """
-    tasks = [
-        generate_temperature_data("B1", "101"),
-        generate_temperature_data("B1", "102"),
-        generate_temperature_data("B2", "201"),
-    ]
+    # Generate tasks for all buildings and rooms
+    tasks = [generate_temperature_data(building, room) for building, room in BUILDINGS_AND_ROOMS]
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
