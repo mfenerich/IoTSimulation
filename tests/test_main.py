@@ -96,3 +96,15 @@ def test_health_stress():
     for _ in range(100):  # Simulate 100 requests
         response = client.get("/health")
         assert response.status_code == 200
+
+def test_http_exception_handler():
+    """
+    Test the custom HTTPException handler.
+
+    Simulate a scenario where an invalid request triggers an HTTPException.
+    """
+    response = client.get("/v1/temperature/some-invalid-endpoint")
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Not Found"
+    }
