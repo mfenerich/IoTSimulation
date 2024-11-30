@@ -26,7 +26,8 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/application_root \
     VIRTUAL_ENVIRONMENT_PATH="/application_root/.venv" \
-    APPLICATION_SERVER_PORT=$APPLICATION_SERVER_PORT
+    APPLICATION_SERVER_PORT=$APPLICATION_SERVER_PORT \
+    TZ=Europe/Zurich
 
 # Adding the virtual environment to PATH in order to "activate" it.
 # https://docs.python.org/3/library/venv.html#how-venvs-work
@@ -52,9 +53,6 @@ COPY --chown=python_application:python_application /app ${PYTHONPATH}/app/
 RUN apt-get update && \
     apt-get install -y --no-install-recommends tzdata postgresql-client curl && \
     rm -rf /var/lib/apt/lists/*
-
-# Set the timezone environment variable
-ENV TZ=Europe/Zurich
 
 # Configure tzdata
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
