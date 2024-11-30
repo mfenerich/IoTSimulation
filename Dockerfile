@@ -1,6 +1,6 @@
 # Using an image for dependency build stage which provides Poetry
 # see: https://github.com/max-pfeiffer/python-poetry/blob/main/build/Dockerfile
-FROM pfeiffermax/python-poetry:1.8.0-poetry1.7.1-python3.12.0-slim-bookworm as dependencies-build-stage
+FROM pfeiffermax/python-poetry:1.8.0-poetry1.7.1-python3.12.0-slim-bookworm AS dependencies-build-stage
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_CACHE_DIR="/application_root/.cache" \
     PYTHONPATH=/application_root
@@ -17,7 +17,7 @@ COPY ./pyproject.toml ${PYTHONPATH}
 RUN poetry install --no-interaction --no-root --without dev
 
 # Using the standard Python image here to have the least possible image size
-FROM python:3.12.0-slim-bookworm as production-image
+FROM python:3.12.0-slim-bookworm AS production-image
 ARG APPLICATION_SERVER_PORT=8000
 
     # https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
