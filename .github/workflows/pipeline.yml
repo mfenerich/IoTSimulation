@@ -22,16 +22,6 @@ jobs:
   run-tests:
     needs: code-quality
     runs-on: ubuntu-latest
-    env:
-        DEBUG: True
-        APP_NAME: FastAPI IoT Simulation
-        ALIGNMENT_INTERVAL: 4
-        API_URL: http://api:8000/v1/temperature/
-        TIMEZONE: Europe/Zurich
-        DATA_INTERVAL: 5
-        POSTGRES_PASSWORD: password
-        POSTGRES_USER: postgres
-        DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/temperature_service
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -39,6 +29,11 @@ jobs:
         uses: ./.github/actions/setup-environment
         with:
           python-version: 3.12.0
+      - name: Load environment variables
+        run: |
+          set -a
+          source .env.example
+          set +a
       - name: Install dependencies
         run: |
           poetry install --with dev --no-interaction --no-root
