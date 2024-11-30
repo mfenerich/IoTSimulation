@@ -4,7 +4,7 @@ on: push
 
 jobs:
   code-quality:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -21,7 +21,31 @@ jobs:
 
   run-tests:
     needs: code-quality
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          DEBUG: True
+          APP_NAME: FastAPI IoT Simulation
+          ALIGNMENT_INTERVAL: 4
+          API_URL: http://api:8000/v1/temperature/
+          TIMEZONE: Europe/Zurich
+          DATA_INTERVAL: 5
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
+          DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/temperature_service
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      database_url: "postgresql://test_user:test_password@localhost:5432/test_db"
+      postgres_user: "test_user"
+      postgres_password: "password"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
