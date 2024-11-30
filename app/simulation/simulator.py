@@ -10,8 +10,8 @@ import datetime
 import logging
 import random
 
-import pytz
 import aiohttp
+import pytz
 
 from app.core.config import settings
 
@@ -46,8 +46,10 @@ async def send_with_retry(url, payload, retries=3, backoff_factor=2):
                     if response.status == 201:
                         return True
                     logger.error(
-                        f"Attempt {attempt + 1} failed: {response.status}, {await response.text()}"
+                        f"Attempt {attempt + 1} failed: {response.status}, "
+                        f"{await response.text()}"
                     )
+
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} error: {e}")
 
@@ -56,9 +58,10 @@ async def send_with_retry(url, payload, retries=3, backoff_factor=2):
     return False
 
 
-async def generate_temperature_data(building_id, room_id):
+async def generate_temperature_data(building_id, room_id, max_iterations=None):
     """Generate and send temperature data for a specific building and room."""
-    while True:
+    iteration = 0
+    while max_iterations is None or iteration < max_iterations:
         timestamp = datetime.datetime.now(TIMEZONE)
         if timestamp.tzinfo is None:
             raise ValueError("Timestamp must be timezone-aware.")
@@ -75,5 +78,5 @@ async def generate_temperature_data(building_id, room_id):
         else:
             logger.error(f"Failed to send data after retries: {temperature_data}")
 
-        # Wait for the configured interval before sending the next data point
+        iteration += 1
         await asyncio.sleep(settings.data_interval)
