@@ -11,7 +11,7 @@ import logging
 import random
 
 import pytz
-import requests
+import aiohttp
 
 from app.core.config import settings
 
@@ -35,21 +35,24 @@ def generate_random_temperature(min_temp=-50, max_temp=50):
     return round(random.uniform(min_temp, max_temp), 2)
 
 
-def send_with_retry(url, payload, retries=3, backoff_factor=2):
+async def send_with_retry(url, payload, retries=3, backoff_factor=2):
     """Send data with retry logic for transient failures."""
     for attempt in range(retries):
         try:
-            response = requests.post(
-                url, json=payload, headers={"Content-Type": "application/json"}
-            )
-            if response.status_code == 201:
-                return True
-            logger.error(
-                f"Attempt {attempt + 1} failed: {response.status_code}, {response.text}"
-            )
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    url, json=payload, headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status == 201:
+                        return True
+                    logger.error(
+                        f"Attempt {attempt + 1} failed: {response.status}, {await response.text()}"
+                    )
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} error: {e}")
-        asyncio.run(asyncio.sleep(backoff_factor**attempt))
+
+        # Wait before retrying
+        await asyncio.sleep(backoff_factor**attempt)
     return False
 
 
@@ -67,7 +70,7 @@ async def generate_temperature_data(building_id, room_id):
             "timestamp": timestamp.isoformat(),
         }
 
-        if send_with_retry(API_URL, temperature_data):
+        if await send_with_retry(API_URL, temperature_data):
             logger.info(f"Successfully sent data: {temperature_data}")
         else:
             logger.error(f"Failed to send data after retries: {temperature_data}")
