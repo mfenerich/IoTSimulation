@@ -240,6 +240,46 @@ The pipeline is triggered on every `push` event to the repository.
 
 ---
 
+## Why These Technologies?
+
+In this project, I’ve chosen a set of modern tools and frameworks to make the backend fast, scalable, and easy to work with.
+
+### **FastAPI**
+- **Why FastAPI?**
+  Powerful and developer-friendly. It’s super fast (thanks to Python’s async capabilities) and makes it ridiculously easy to define APIs. It also automatically generates Swagger and ReDoc documentation.
+
+- **Why It Fits This Project**:
+  FastAPI’s performance and asynchronous support keep everything running smoothly.
+
+---
+
+### **Uvicorn**
+- **Why Uvicorn?**
+  It’s an ASGI server, which means it’s optimized for handling asynchronous tasks, exactly what is needed for a project like this, where requests can come in thick and fast.
+
+- **Why It Fits This Project**:
+  It works seamlessly with FastAPI to deliver high performance and low latency.
+
+---
+
+### **SQLAlchemy**
+- **Why SQLAlchemy?**
+  When it comes to interacting with a database, SQLAlchemy strikes the perfect balance between power and flexibility. It’s like having the best of both worlds: a Pythonic ORM for when you want to work with objects and raw SQL for when you need precise control, just like happened on this project.
+
+- **Why It Fits This Project**:
+  It’s great for working with PostgreSQL, which is the backbone of this project.
+
+---
+
+### **Alembic**
+- **Why Alembic?**
+  Let’s face it: managing database schema changes manually is a pain. That’s where Alembic comes in. It keeps track of every schema update, making database migrations as smooth as butter.
+
+- **Why It Fits This Project**:
+  As the project evolves, I need a reliable way to update the database schema without breaking anything. Alembic makes this process almost effortless, letting me focus on the fun stuff—like coding!
+
+---
+
 ## Conclusion
 
 This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging **TimescaleDB** for data aggregation and **Kubernetes** for deployment, it balances simplicity with performance. This setup serves as a solid foundation for more complex IoT systems, including real-time analytics and event-driven architectures.
