@@ -1,148 +1,195 @@
-# IoT Temperature API
+# Temperature Monitoring Service
+
+This project implements a backend service for ingesting, storing, and analyzing temperature data from multiple buildings and rooms. It showcases practical techniques for handling time-series data in an IoT-like environment, leveraging TimescaleDB and Kubernetes for scalability and efficiency.
+
+---
 
 ## Overview
 
-The **IoT Temperature API** is a FastAPI-based application designed to manage temperature data for IoT systems. It provides a suite of endpoints to add temperature data, fetch average temperatures, and retrieve system health and settings. 
+The solution consists of two services:
 
-This README provides details about the application, its features, and instructions for usage.
+1. **API Service**:
+   - A RESTful API that provides the following endpoints:
+     - **POST /temperature**: Accepts temperature readings in the following format:
+       ```json
+       {
+         "building_id": "B1",
+         "room_id": "101",
+         "temperature": 22.5,
+         "timestamp": "2024-12-01T12:34:56.000Z"
+       }
+       ```
+     - **GET /temperature/average**: Retrieves the average temperature for a specific building and room over a given time interval.
+
+2. **Simulation Service**:
+   - Runs in its own Kubernetes pod and generates random temperature readings between -50°C and 50°C for predefined buildings and rooms:
+     ```python
+     [
+         ("B1", "101"),
+         ("B1", "102"),
+         ("B2", "201"),
+     ]
+     ```
+   - Sends these readings to the API to simulate real-world IoT data streams.
 
 ---
 
-## Features
+## Database Design and Strategy
 
-- **Temperature Management**:
-  - Add temperature data for buildings and rooms.
-  - Fetch average temperature data for specific time ranges.
+The project uses **TimescaleDB**, a PostgreSQL extension optimized for time-series data, to efficiently handle continuous data streams and perform aggregations.
 
-- **Health Check**:
-  - Verify the health of the application with a dedicated endpoint.
+### Why TimescaleDB?
 
-- **Application Settings**:
-  - Retrieve runtime configuration, such as app name and debug mode status.
+- **Time-Series Optimization**: Efficiently handles high-frequency inserts and queries.
+- **Continuous Aggregates**: Precomputes summaries for time windows, reducing computational overhead.
+- **Familiarity**: Built on PostgreSQL, allowing developers to use standard SQL skills.
 
-- **Robust Error Handling**:
-  - Custom exception handlers for HTTP and unexpected errors.
+### Schema and Aggregation Strategy
+
+Temperature readings are stored in a `temperatures` table, with continuous aggregates used to calculate rolling averages over time intervals.
+
+#### Continuous Aggregate Creation:
+```sql
+CREATE MATERIALIZED VIEW avg_temperature_time_interval
+WITH (timescaledb.continuous) AS
+SELECT time_bucket('2 minutes', timestamp) AS bucket, -- Group data into 2-minute intervals
+       building_id,
+       room_id,
+       AVG(temperature) AS avg_temp -- Compute average temperature
+FROM temperatures
+GROUP BY bucket, building_id, room_id
+WITH NO DATA; -- Defer initial computation for faster creation
+```
+
+> **Note**: For production, a 15-minute interval is recommended. The 2-minute interval here is for quicker feedback during testing.
+
+#### Continuous Aggregate Policy:
+```sql
+SELECT add_continuous_aggregate_policy('avg_temperature_time_interval',
+    start_offset => INTERVAL '1 hour',
+    end_offset => INTERVAL '10 seconds',
+    schedule_interval => INTERVAL '5 seconds'); -- Frequent updates for demonstration
+```
+
+- **Explanation**: This policy ensures aggregates remain up-to-date by incrementally processing changes in the underlying data.
 
 ---
 
-## API Documentation
+## Deployment Architecture
 
-### Base URL
-The API is hosted at:  
-`http://<host>:<port>/`
+The project uses **Kind** (Kubernetes in Docker) for local testing and deployment, with Kubernetes managing both the API and simulation services.
 
-### Endpoints
+### Deployment Steps
 
-#### Health Check
+1. **Set Up Kind Cluster**:
+   - A local Kubernetes cluster is created using Kind.
+   - Automated via the `Makefile` for ease of setup.
 
-**GET** `/health`
+2. **Deploy Services**:
+   - API and simulation services are deployed as separate pods.
+   - **Zalando Postgres Operator** is used to initialize TimescaleDB with the required schema and policies.
 
-- **Description**: Checks the health status of the service.
-- **Response**:
-  - Status: 200 OK
-  - Body:
-    ```json
-    {
-      "status": "ok",
-      "message": "Service is healthy"
-    }
+3. **Automation**:
+   - The `Makefile` simplifies cluster setup, service deployment, and teardown:
+     ```bash
+     make build
+     ```
+
+### Deployment Diagram
+
+```plaintext
++---------------------+
+| Simulation Service  |  --> Sends data to -->
++---------------------+                      +----------------+
+                                            | API Service    |
++---------------------+  <-------- Queries--+----------------+
+| TimescaleDB         |  Stores Aggregates |
++---------------------+
+```
+
+---
+
+## Testing Strategy
+
+1. **Unit Tests**:
+   - Validate API endpoints for:
+     - Input validation.
+     - Correct database operations.
+     - Handling of edge cases.
+
+2. **Simulation Validation**:
+   - Verify that the simulation service generates data correctly.
+   - Ensure API ingestion works as expected.
+
+3. **Performance Testing**:
+   - Simulate high-frequency data ingestion.
+
+4. **Integration Tests**:
+   - Would be nice to have them on this project :s
+
+---
+
+## Considerations and Trade-Offs
+
+1. **Database Selection**:
+   - While TimescaleDB is powerful for time-series data, alternatives like Apache Kafka (for event streaming) or InfluxDB (for time-series storage) may handle higher throughput for IoT applications.
+
+2. **Scalability**:
+   - The current architecture is designed for simplicity and demonstration. Adding tools like Kafka for streaming or Grafana for visualization can enhance scalability and usability.
+
+---
+
+## How to Get Started
+
+### Prerequisites
+- Docker
+- Kubernetes (Kind)
+- Python 3.12+
+- Make
+
+### Setup and Deployment
+
+1. Clone the repository:
+   ```bash
+   cd IoTSimulation
+   ```
+
+2. Build and deploy locally:
+   ```bash
+   make build
+   ```
+
+3. What for the build process:
+    Once it is finished, by the k8s declarative nature, it will take up to a minute for all pods beging deploy by k8s.
+    run:
+
+    ```bash
+    kubectl get po
+    ```
+    and it will be ready when you see something similar to this:
+    ```bash
+    NAME                                 READY   STATUS    RESTARTS      AGE
+    acid-minimal-cluster-0               1/1     Running   0             74m
+    iotsimulator-7cddff8495-qb847        2/2     Running   0             74m
+    postgres-operator-69c58b594c-lml2n   1/1     Running   1 (74m ago)   75m
+    ```
+
+4. Access the API:
+   - API Service: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
+   - Temperature data will be simulated and ingested automatically.
+
+
+### Testing locally:
+
+    ```bash
+    poetry install
+    poetry run pytest
     ```
 
 ---
 
-#### Temperature Management
+## Conclusion
 
-The **Temperature Management** endpoints are available under the `/v1/temperature` prefix. Refer to the specific router documentation for more details.
+This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging TimescaleDB for data aggregation and Kubernetes for deployment, it balances simplicity with performance. This setup can serve as a foundation for more complex IoT systems, including real-time analytics and event-driven architectures.
 
----
-
-#### Application Settings
-
-**GET** `/settings`
-
-- **Summary**: Retrieve application runtime settings.
-- **Response Model**: `SettingsResponse`
-  - `app_name` (string): The name of the application.
-  - `debug` (boolean): Indicates whether the application is running in debug mode.
-
----
-
-### Exception Handling
-
-- **HTTP Exceptions**:
-  Logs and responds with standardized JSON for HTTP errors.
-  ```json
-  {
-    "error": "Detailed error message",
-    "code": <HTTP status code>
-  }
-  ```
-
-- **Generic Exceptions**:
-  Handles unexpected errors gracefully with a 500 response.
-  ```json
-  {
-    "error": "An unexpected error occurred. Please try again later.",
-    "code": 500
-  }
-  ```
-
----
-
-## Application Configuration
-
-The application is configured using the `app.core.config` module. You can modify settings such as `app_name`, `debug`, and other configurations as needed.
-
----
-
-## Lifespan Hooks
-
-Custom startup and shutdown logic is handled using an asynchronous lifespan context.  
-- **Startup**: Logs the initialization of the service.
-- **Shutdown**: Logs the termination of the service.
-
----
-
-## Running the Application
-
-### Prerequisites
-
-- **Python**: Version 3.9 or later.
-- **Dependencies**: Install via `requirements.txt`.
-
-```bash
-pip install -r requirements.txt
-```
-
-### Running Locally
-
-Run the application using `uvicorn`:
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
----
-
-## Contact
-
-For support or inquiries, contact:
-
-- **Name**: API Support  
-- **URL**: [feneri.ch](http://feneri.ch)  
-- **Email**: [marcel@feneri.ch](mailto:marcel@feneri.ch)  
-
----
-
-## License
-
-This project is licensed under the **MIT License**.  
-For details, see the [LICENSE](https://opensource.org/licenses/MIT) file.
-
----
-
-## Additional Information
-
-- **API Documentation**: The API's interactive Swagger UI is available at `/docs`, and ReDoc documentation can be accessed at `/redoc`.
-- **Version**: `1.0.0`
-- **Terms of Service**: [Terms of Service](http://example.com/terms/).
+Feel free to explore the code, test the setup, and share your feedback!
