@@ -10,8 +10,6 @@ This project implements a backend service for ingesting, storing, and analyzing 
 
 While the code and configuration may work on other platforms, the setup, tooling, and dependencies (such as Docker images and Kubernetes configurations) have been optimized and tested exclusively on **macOS ARM64**. If you are using a different operating system or architecture, additional modifications may be required to ensure compatibility.  
 
-Please proceed accordingly! If you encounter issues on non-macOS ARM64 setups, contributions or feedback are welcome.
-
 ---
 
 ## Overview
