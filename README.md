@@ -1,6 +1,6 @@
 # Temperature Monitoring Service
 
-This project implements a backend service for ingesting, storing, and analyzing temperature data from multiple buildings and rooms. It showcases practical techniques for handling time-series data in an IoT-like environment, leveraging TimescaleDB and Kubernetes for scalability and efficiency.
+This project implements a backend service for ingesting, storing, and analyzing temperature data from multiple buildings and rooms. It showcases practical techniques for handling time-series data in an IoT-like environment, leveraging **TimescaleDB** and **Kubernetes** for scalability and efficiency.
 
 ---
 
@@ -40,19 +40,19 @@ The project uses **TimescaleDB**, a PostgreSQL extension optimized for time-seri
 
 ### Why TimescaleDB?
 
-- **Time-Series Optimization**: Efficiently handles high-frequency inserts and queries.
+- **Time-Series Optimization**: Handles high-frequency inserts and queries efficiently.
 - **Continuous Aggregates**: Precomputes summaries for time windows, reducing computational overhead.
-- **Familiarity**: Built on PostgreSQL, allowing developers to leverage existing SQL expertise.
+- **Familiarity**: Built on PostgreSQL, enabling developers to leverage existing SQL expertise.
 
 ### Schema and Aggregation Strategy
 
-Temperature readings are stored in a `temperatures` table, with continuous aggregates used to calculate rolling averages over time intervals.
+Temperature readings are stored in a `temperatures` table, with **continuous aggregates** used to calculate rolling averages over time intervals.
 
 #### Continuous Aggregate Creation:
 ```sql
 CREATE MATERIALIZED VIEW avg_temperature_time_interval
 WITH (timescaledb.continuous) AS
-SELECT time_bucket('2 minutes', timestamp) AS bucket, -- Group data into 15-minute (read 2) intervals
+SELECT time_bucket('2 minutes', timestamp) AS bucket, -- Group data into 2-minute intervals
        building_id,
        room_id,
        AVG(temperature) AS avg_temp -- Compute average temperature
@@ -61,7 +61,7 @@ GROUP BY bucket, building_id, room_id
 WITH NO DATA; -- Defer initial computation for faster creation
 ```
 
-> **Note**: For production, a 15-minute interval is recommended. The 2-minute interval here is for quicker feedback during testing.
+> **Note**: For production, a 15-minute interval is recommended. The 2-minute interval is used here to provide quicker feedback during testing.
 
 #### Continuous Aggregate Policy:
 ```sql
@@ -90,7 +90,7 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
    - **Zalando Postgres Operator** is used to initialize TimescaleDB with the required schema and policies.
 
 3. **Automation**:
-   - The `Makefile` simplifies cluster setup, service deployment, and teardown:
+   - Use the `Makefile` to simplify cluster setup, service deployment, and teardown:
      ```bash
      make build
      ```
@@ -109,8 +109,9 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
      ```
 
 5. **Access the API**:
-   - API Service: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
-   - The simulation service will automatically generate and ingest temperature data.
+   - API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
+   - **Note**: The first results will take approximately 2 minutes to appear, as the system needs to process the initial time bucket before returning data.
+   - The simulation service automatically generates and ingests temperature data.
 
 ---
 
@@ -127,10 +128,10 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
    - Ensure API ingestion works as expected.
 
 3. **Performance Testing**:
-   - Simulate high-frequency data ingestion.
+   - Simulate high-frequency data ingestion to evaluate scalability.
 
 4. **Integration Tests**:
-   - These would be a great addition for end-to-end validation in future iterations.
+   - These would be an excellent addition for end-to-end validation in future iterations.
 
 ### Running Tests
 To run tests locally:
@@ -162,7 +163,6 @@ poetry run pytest
 ### Setup and Deployment
 
 1. Clone the repository:
-   Unzip the provided file.
    ```bash
    cd IoTSimulation-main
    ```
@@ -180,27 +180,44 @@ poetry run pytest
 4. Access the API:
    - API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
 
-### Check auto-generated API's documentation
-```bash
-http://localhost:30080/docs
-http://localhost:30080/redoc
-```
+### Auto-Generated API Documentation
+- Swagger UI: [http://localhost:30080/docs](http://localhost:30080/docs)
+- ReDoc: [http://localhost:30080/redoc](http://localhost:30080/redoc)
 
-### Connecting to database:
-Run the k8s port-forward and connect normaly to the database using postgres or timescales's drivers:
-```bash
-kubectl port-forward pod/acid-minimal-cluster-0 5432:5432
-```
+### Connecting to the Database
+1. Forward the PostgreSQL pod port to your local machine:
+   ```bash
+   kubectl port-forward pod/acid-minimal-cluster-0 5432:5432
+   ```
 
+2. Connect using PostgreSQL credentials:
+   ```bash
+   user: postgres
+   pass: password
+   ```
+
+3. Example Queries:
+   - Retrieve raw temperature data:
+     ```sql
+     SELECT * FROM temperatures;
+     ```
+   - View aggregated temperature averages:
+     ```sql
+     SELECT *
+     FROM avg_temperature_time_interval
+     ORDER BY bucket DESC;
+     ```
+
+### Teardown
+To remove the deployment and cluster:
 ```bash
-user: postgres
-pass: password
+make delete_kind_cluster
 ```
 
 ---
 
 ## Conclusion
 
-This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging TimescaleDB for data aggregation and Kubernetes for deployment, it balances simplicity with performance. This setup can serve as a foundation for more complex IoT systems, including real-time analytics and event-driven architectures.
+This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging **TimescaleDB** for data aggregation and **Kubernetes** for deployment, it balances simplicity with performance. This setup serves as a solid foundation for more complex IoT systems, including real-time analytics and event-driven architectures.
 
 Feel free to explore the code, test the setup, and share your feedback!
