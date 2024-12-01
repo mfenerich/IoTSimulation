@@ -83,9 +83,24 @@ SELECT add_continuous_aggregate_policy('avg_temperature_time_interval',
 
 ---
 
+## Logging and Monitoring
+
+To facilitate system monitoring and debugging, this project generates an **`app.log`** file where all system logs are stored. This log file includes details about API activity, system errors, and general performance metrics.
+
+### Key Features of `app.log`:
+- Provides a comprehensive history of system operations.
+- Useful for troubleshooting errors and monitoring API performance.
+- Designed to support future monitoring integrations like ELK (Elasticsearch, Logstash, Kibana) or Grafana.
+
+The log file is stored in the root directory of the application and is automatically updated during runtime.
+
+---
+
 ## Deployment Architecture
 
 The project uses **Kind** (Kubernetes in Docker) for local testing and deployment, with Kubernetes managing both the API and simulation services.
+
+Additionally, the integration of logging via app.log ensures the system is well-prepared for monitoring and debugging. 
 
 ---
 
