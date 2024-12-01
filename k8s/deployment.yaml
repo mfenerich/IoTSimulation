@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: iotsimulator
+  name: iotsimulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iotsimulator
+  template:
+    metadata:
+      labels:
+        app: iotsimulator
+    spec:
+      containers:
+      - image: localhost:5555/temperature-service:latest
+        name: temperature-service
+        envFrom:
+        - configMapRef:
+            name: iotsimulator-env
+        - secretRef:
+            name: iotsimulator-secret
+        resources: {}

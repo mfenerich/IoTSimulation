@@ -63,11 +63,13 @@ WORKDIR /app
 COPY ./app/scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+COPY ./app /app
+
 # Document the exposed port
 # https://docs.docker.com/engine/reference/builder/#expose
 EXPOSE ${APPLICATION_SERVER_PORT}
 
 # Use the unpriveledged user to run the application
-USER 10001
+# USER 10001
 
 ENTRYPOINT ["/entrypoint.sh"]

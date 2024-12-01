@@ -1,0 +1,24 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: acid-minimal-cluster
+spec:
+  teamId: "acid"
+  volume:
+    size: 1Gi
+  numberOfInstances: 1
+  users:
+    zalando:
+    - superuser
+    - createdb
+  databases:
+    temperature_service: zalando
+  preparedDatabases:
+    zalando:
+      extensions:
+        timescaledb: public
+      schemas:
+        public:
+          defaultRoles: false
+  postgresql:
+    version: "15"

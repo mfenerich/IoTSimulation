@@ -2,7 +2,7 @@
 set -e
 
 # Wait for PostgreSQL to be ready
-until pg_isready -h postgres -p 5432; do
+until pg_isready -h "$DB_HOST" -p "$DB_PORT"; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done

@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  DB_HOST: "acid-minimal-cluster.default.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "temperature_service"
+  ALIGNMENT_INTERVAL: "4"
+  API_URL: http://api:8000/v1/temperature/
+  APP_NAME: FastAPI IoT Simulation
+  DATA_INTERVAL: "5"
+  DATABASE_URL: postgresql+asyncpg://postgres:password@acid-minimal-cluster.default.svc.cluster.local:5432/temperature_service
+  DEBUG: "True"
+  POSTGRES_PASSWORD: password
+  POSTGRES_USER: 'postgres # I know that user and pass are duplicated with DATABASE_URL.
+    But it is fine for this scope'
+  TIMEZONE: Europe/Zurich
+kind: ConfigMap
+metadata:
+  name: iotsimulator-env

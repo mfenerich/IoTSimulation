@@ -18,6 +18,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+
+    # Activate TimescaleDB extension
+    op.execute("CREATE EXTENSION IF NOT EXISTS timescaledb;")
+
     # Create the table with a composite primary key
     op.create_table(
         "temperatures",
@@ -51,3 +55,5 @@ def downgrade() -> None:
     # Drop the table and associated indexes
     op.drop_index("idx_building_room_timestamp", table_name="temperatures")
     op.drop_table("temperatures")
+    # Deactivate the TimescaleDB extension
+    op.execute("DROP EXTENSION IF EXISTS timescaledb;")
