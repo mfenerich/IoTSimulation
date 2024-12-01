@@ -138,6 +138,14 @@ This performs the following tasks:
 kubectl get po
 ```
 
+The system will be ready to use when you see something like this:
+```bash
+NAME                                 READY   STATUS    RESTARTS       AGE
+acid-minimal-cluster-0               1/1     Running   0              12m
+iotsimulator-7cddff8495-qb847        2/2     Running   0              12m
+postgres-operator-69c58b594c-lml2n   1/1     Running   1 (12m ago)    12m
+```
+
 ### Access the API
 - API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
 - **Note**: The first results will take approximately 2 minutes to appear, as the system needs to process the initial time bucket.
