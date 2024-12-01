@@ -4,7 +4,6 @@ This module defines the application configuration using Pydantic's BaseSettings.
 The configuration is loaded from environment variables and supports default values.
 """
 
-from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -31,9 +30,6 @@ class Settings(BaseSettings):
     data_interval: int = 5  # Interval between data points in seconds
     postgres_user: str
     postgres_password: str
-
-    # Use ConfigDict for configuration
-    model_config = ConfigDict(env_file=".env")
 
 
 settings = Settings()

@@ -69,7 +69,4 @@ COPY ./app /app
 # https://docs.docker.com/engine/reference/builder/#expose
 EXPOSE ${APPLICATION_SERVER_PORT}
 
-# Use the unpriveledged user to run the application
-# USER 10001
-
 ENTRYPOINT ["/entrypoint.sh"]

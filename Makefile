@@ -10,12 +10,11 @@ push_docker_image_to_local_registry: create_docker_registry build_iotsimulator
 	docker push localhost:5555/temperature-service:latest
 
 install_kind:
-	curl --location --output ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.25.0/kind-darwin-arm64 && \
-		chmod +x ./kind && \
+	chmod +x ./kind && \
 		./kind --version
 
 create_kind_cluster: install_kind install_kubectl
-	./kind create cluster --name iotsimulator --config ./k8s/kind_config.yaml || true && \
+	./kind create cluster --name iotsimulator --config ./k8s/kind-config.yaml || true && \
 		kubectl get nodes && \
 		kubectl config use-context kind-iotsimulator
 
@@ -37,7 +36,7 @@ connect_registry_to_kind_network:
 	docker network connect kind local-registry || true
 
 connect_registry_registry: connect_registry_to_kind_network
-	kubectl apply -f ./k8s/kind_configmap.yaml
+	kubectl apply -f ./k8s/kind-configmap.yaml
 
 create_kind_cluster_with_registry:
 	$(MAKE) create_kind_cluster && $(MAKE) connect_registry_registry
@@ -58,5 +57,5 @@ deploy_all_resources:
 		kubectl apply -f ./k8s/timescaledb-cluster.yaml && \
 		kubectl apply -f ./k8s/iotsimulator-config.yaml && \
 		kubectl apply -f ./k8s/iotsimulator-secret.yaml && \
-		kubectl apply -f ./k8s/deployment.yaml && \
+		kubectl apply -f ./k8s/app-deployment.yaml && \
 		kubectl apply -f ./k8s/iotsimulator-service.yaml
