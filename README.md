@@ -1,7 +1,3 @@
-Your updated README is detailed and covers most of the necessary aspects for setting up, deploying, and using the service. Below is a slightly refined version, improving clarity and formatting:
-
----
-
 # Temperature Monitoring Service
 
 This project implements a backend service for ingesting, storing, and analyzing temperature data from multiple buildings and rooms. It showcases practical techniques for handling time-series data in an IoT-like environment, leveraging **TimescaleDB** and **Kubernetes** for scalability and efficiency.
