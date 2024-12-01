@@ -193,6 +193,53 @@ make delete_kind_cluster
 
 ---
 
+## CI/CD Pipelines
+
+This project includes a robust CI/CD pipeline implemented using **GitHub Actions**. The pipeline ensures code quality and testing are maintained at every push, improving reliability and streamlining the development process.
+
+### Pipeline Overview
+
+The pipeline is defined in `.github/workflows/pipeline.yml` and consists of two main jobs:
+
+1. **Code Quality Check**:
+   - **Purpose**: Ensures that the code adheres to style guidelines and passes pre-commit hooks.
+   - **Steps**:
+     - Checks out the repository code.
+     - Sets up a Python environment using a custom GitHub Action (`setup-environment`).
+     - Installs dependencies using Poetry.
+     - Runs `ruff` (a fast Python linter) through pre-commit hooks to validate code quality.
+   - **Dependencies**:
+     - Pre-commit hooks are configured to run automatically during this step.
+
+2. **Run Tests**:
+   - **Purpose**: Executes all unit tests to validate the codebase.
+   - **Steps**:
+     - Waits for the `code-quality` job to complete.
+     - Checks out the repository code.
+     - Sets up a Python environment using the same custom GitHub Action.
+     - Installs dependencies using Poetry.
+     - Runs the test suite with `pytest`.
+   - **Environment Variables**:
+     - Critical configuration values like `DATABASE_URL`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` are passed via environment variables for test execution. Secrets should ideally be stored securely using GitHub's environment variables and secrets management.
+
+### Custom GitHub Action: `setup-environment`
+
+A custom composite action (`action.yaml`) is used to standardize the Python environment setup. This action simplifies the pipeline by handling the installation of specific Python and Poetry versions and caching dependencies for faster builds.
+
+#### `action.yaml`
+- **Inputs**:
+  - `python-version`: Specifies the Python version to be used (default: 3.11).
+  - `poetry-version`: Specifies the Poetry version to be used (default: 1.8.3).
+- **Steps**:
+  - Installs the specified Poetry version using `pipx`.
+  - Sets up the specified Python version using the `actions/setup-python` action, with Poetry package caching enabled.
+
+### Trigger
+
+The pipeline is triggered on every `push` event to the repository.
+
+---
+
 ## Conclusion
 
 This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging **TimescaleDB** for data aggregation and **Kubernetes** for deployment, it balances simplicity with performance. This setup serves as a solid foundation for more complex IoT systems, including real-time analytics and event-driven architectures.
