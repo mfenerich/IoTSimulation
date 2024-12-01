@@ -107,6 +107,22 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
      brew install make
      ```
 
+## **Important Disclaimer: Docker Resource Configuration**
+
+🚨 **Resource Requirements**:  
+Some environments may require more system resources to run this project efficiently, especially when handling high-frequency IoT data streams or managing multiple Kubernetes pods.
+
+### **Recommended Docker Configuration**
+To ensure smooth operation, it is recommended to configure your Docker environment with the following resources:
+- **CPU Limit**: 4 cores
+- **Memory Limit**: 6 GB
+- **Swap**: 2 GB
+- **Virtual Disk Space**: 120 GB
+
+You can adjust these settings in your Docker Desktop preferences under **Resources**. Properly configuring these resources will help avoid performance bottlenecks or crashes, especially during the build or deployment phases.
+
+💡 **Tip**: If you're running Docker on macOS ARM64, these settings have been tested to work well under typical project workloads.
+
 ---
 
 ## Setup and Deployment
