@@ -1,8 +1,7 @@
 .PHONY: build_iotsimulator install_kind create_kind_cluster install_kubectl \
 	create_docker_registry connect_registry_to_kind_network connect_registry_registry \
 	create_kind_cluster_with_registry delete_kind_cluster delete_docker_registry \
-	push_docker_image_to_local_registry build install_postgres_operator \
-	deploy_database deploy_main_app deploy_all_resources
+	push_docker_image_to_local_registry build deploy_all_resources
 
 build_iotsimulator:
 	docker build -t localhost:5555/temperature-service:latest .
@@ -50,20 +49,14 @@ delete_docker_registry:
 	docker stop local-registry && docker rm local-registry
 
 build:
-	$(MAKE) push_docker_image_to_local_registry && $(MAKE) create_kind_cluster_with_registry
-
-install_postgres_operator:
-	kubectl apply -k github.com/mfenerich/postgres-operator/manifests && \
-		kubectl apply -k github.com/zalando/postgres-operator/ui/manifests
-
-deploy_database:
-	kubectl apply -f ./k8s/postgres-secret.yaml && \
-		kubectl apply -f ./k8s/timescaledb-cluster.yaml
-
-deploy_main_app:
-	kubectl apply -f ./k8s/iotsimulator-config.yaml && \
-		kubectl apply -f ./k8s/iotsimulator-secret.yaml && \
-		kubectl apply -f ./k8s/deployment.yaml
+	$(MAKE) push_docker_image_to_local_registry && $(MAKE) create_kind_cluster_with_registry  && $(MAKE) deploy_all_resources
 
 deploy_all_resources:
-	$(MAKE) deploy_database && $(MAKE) deploy_main_app
+	kubectl apply -k github.com/mfenerich/postgres-operator/manifests && \
+		kubectl rollout status deployment/postgres-operator --timeout=120s && \
+		kubectl apply -f ./k8s/postgres-secret.yaml && \
+		kubectl apply -f ./k8s/timescaledb-cluster.yaml && \
+		kubectl apply -f ./k8s/iotsimulator-config.yaml && \
+		kubectl apply -f ./k8s/iotsimulator-secret.yaml && \
+		kubectl apply -f ./k8s/deployment.yaml && \
+		kubectl apply -f ./k8s/iotsimulator-service.yaml
