@@ -100,8 +100,6 @@ The log file is stored in the root directory of the application and is automatic
 
 The project uses **Kind** (Kubernetes in Docker) for local testing and deployment, with Kubernetes managing both the API and simulation services.
 
-Additionally, the integration of logging via app.log ensures the system is well-prepared for monitoring and debugging. 
-
 ---
 
 ## Prerequisites
@@ -321,6 +319,7 @@ In this project, I’ve chosen a set of modern tools and frameworks to make the 
 
 ## Conclusion
 
-This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging **TimescaleDB** for data aggregation and **Kubernetes** for deployment, it balances simplicity with performance. This setup serves as a solid foundation for more complex IoT systems, including real-time analytics and event-driven architectures.
+This project demonstrates a scalable and efficient approach to handling time-series data in an IoT environment. By leveraging **TimescaleDB** for data aggregation and **Kubernetes** for deployment, it balances simplicity with performance. Additionally, the integration of logging via app.log ensures the system is well-prepared for monitoring and debugging. 
+
 
 Feel free to explore the code, test the setup, and share your feedback!
