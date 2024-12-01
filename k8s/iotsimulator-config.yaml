@@ -4,7 +4,7 @@ data:
   DB_PORT: "5432"
   DB_NAME: "temperature_service"
   ALIGNMENT_INTERVAL: "4"
-  API_URL: http://api:8000/v1/temperature/
+  API_URL: http://localhost:8000/v1/temperature/
   APP_NAME: FastAPI IoT Simulation
   DATA_INTERVAL: "5"
   DATABASE_URL: postgresql+asyncpg://postgres:password@acid-minimal-cluster.default.svc.cluster.local:5432/temperature_service
