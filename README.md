@@ -1,3 +1,7 @@
+Your updated README is detailed and covers most of the necessary aspects for setting up, deploying, and using the service. Below is a slightly refined version, improving clarity and formatting:
+
+---
+
 # Temperature Monitoring Service
 
 This project implements a backend service for ingesting, storing, and analyzing temperature data from multiple buildings and rooms. It showcases practical techniques for handling time-series data in an IoT-like environment, leveraging **TimescaleDB** and **Kubernetes** for scalability and efficiency.
@@ -79,106 +83,64 @@ SELECT add_continuous_aggregate_policy('avg_temperature_time_interval',
 
 The project uses **Kind** (Kubernetes in Docker) for local testing and deployment, with Kubernetes managing both the API and simulation services.
 
-### Deployment Steps
+---
 
-1. **Set Up Kind Cluster**:
-   - A local Kubernetes cluster is created using Kind.
-   - Automated via the `Makefile` for ease of setup.
+## Prerequisites
 
-2. **Deploy Services**:
-   - API and simulation services are deployed as separate pods.
-   - **Zalando Postgres Operator** is used to initialize TimescaleDB with the required schema and policies.
-
-3. **Automation**:
-   - Use the `Makefile` to simplify cluster setup, service deployment, and teardown:
+### Required Tools and Dependencies
+1. **Docker**: Used for containerizing and running the services.
+   - Installation: [Docker Documentation](https://docs.docker.com/get-docker/)
+2. **Homebrew**: A package manager for macOS, used to install other tools like `kubectl`.
+3. **Kubectl**: Command-line tool to interact with Kubernetes.
+   - Installation via Homebrew:
      ```bash
-     make build
+     brew install kubectl
      ```
-
-4. **Monitor Pod Status**:
-   - Check the status of all pods to ensure they are running:
+   - **Note**: The `Makefile` automatically installs `kubectl` if not already installed.
+4. **GNU Make**: Used to simplify and automate deployment tasks.
+   - Installation via Homebrew:
      ```bash
-     kubectl get po
+     brew install make
      ```
-   - Example output when all pods are ready:
-     ```bash
-     NAME                                 READY   STATUS    RESTARTS   AGE
-     acid-minimal-cluster-0               1/1     Running   0          74m
-     iotsimulator-7cddff8495-qb847        2/2     Running   0          74m
-     postgres-operator-69c58b594c-lml2n   1/1     Running   1          75m
-     ```
-
-5. **Access the API**:
-   - API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
-   - **Note**: The first results will take approximately 2 minutes to appear, as the system needs to process the initial time bucket before returning data.
-   - The simulation service automatically generates and ingests temperature data.
 
 ---
 
-## Testing Strategy
+## Setup and Deployment
 
-1. **Unit Tests**:
-   - Validate API endpoints for:
-     - Input validation.
-     - Correct database operations.
-     - Handling of edge cases.
-
-2. **Simulation Validation**:
-   - Verify that the simulation service generates data correctly.
-   - Ensure API ingestion works as expected.
-
-3. **Performance Testing**:
-   - Simulate high-frequency data ingestion to evaluate scalability.
-
-4. **Integration Tests**:
-   - These would be an excellent addition for end-to-end validation in future iterations.
-
-### Running Tests
-To run tests locally:
+### Clone the Repository
 ```bash
-poetry install
-poetry run pytest
+cd IoTSimulation-main
 ```
 
+### Build and Deploy Locally
+```bash
+make build
+```
+This performs the following tasks:
+- Builds and pushes the Docker image.
+- Creates the Kind cluster and local registry configuration.
+- Deploys all Kubernetes resources, including:
+  - Postgres Operator.
+  - TimescaleDB cluster.
+  - Application services.
+
+### Notes on Deployment
+- A local Docker registry is used to push and pull images locally. 
+
+> **Note**: I initially intended to create my own local Docker registry to build and pull everything locally. However, due to licensing constraints, I had to build my own TimescaleDB image based on Zalando's implementation. Since the build process for this type of image is complex and resource-intensive, I opted to pull it from my public Docker Hub instead. About the the local Docker registry I have something on my [personal blog](https://feneri.ch/kubernetes/2024/10/21/k8s-project-creating-a-local-docker-registry-part-iii.html).
+
 ---
 
-## Considerations and Trade-Offs
+## Verifying Deployment
 
-1. **Database Selection**:
-   - While TimescaleDB is powerful for time-series data, alternatives like Apache Kafka (for event streaming) or InfluxDB (for time-series storage) may handle higher throughput for IoT applications.
+### Monitor Pods
+```bash
+kubectl get po
+```
 
-2. **Scalability**:
-   - The current architecture is designed for simplicity and demonstration. Adding tools like Kafka for streaming or Grafana for visualization can enhance scalability and usability.
-
----
-
-## How to Get Started
-
-### Prerequisites
-- Docker
-- Kubernetes (Kind)
-- Python 3.12+
-- Make
-
-### Setup and Deployment
-
-1. Clone the repository:
-   ```bash
-   cd IoTSimulation-main
-   ```
-
-2. Build and deploy locally:
-   ```bash
-   make build
-   ```
-
-3. Monitor pods and ensure all services are running:
-   ```bash
-   kubectl get po
-   ```
-
-4. Access the API:
-   - API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
+### Access the API
+- API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
+- **Note**: The first results will take approximately 2 minutes to appear, as the system needs to process the initial time bucket.
 
 ### Auto-Generated API Documentation
 - Swagger UI: [http://localhost:30080/docs](http://localhost:30080/docs)
@@ -189,13 +151,11 @@ poetry run pytest
    ```bash
    kubectl port-forward pod/acid-minimal-cluster-0 5432:5432
    ```
-
 2. Connect using PostgreSQL credentials:
    ```bash
    user: postgres
    pass: password
    ```
-
 3. Example Queries:
    - Retrieve raw temperature data:
      ```sql
@@ -208,8 +168,21 @@ poetry run pytest
      ORDER BY bucket DESC;
      ```
 
-### Teardown
-To remove the deployment and cluster:
+---
+
+## Testing
+
+### Running Tests Locally
+```bash
+poetry install
+poetry run pytest
+```
+
+---
+
+## Teardown
+
+To clean up the deployment and Kind cluster:
 ```bash
 make delete_kind_cluster
 ```
