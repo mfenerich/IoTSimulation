@@ -6,7 +6,7 @@ This project implements a backend service for ingesting, storing, and analyzing 
 
 ## Overview
 
-The solution consists of two services:
+The solution consists of two main services:
 
 1. **API Service**:
    - A RESTful API that provides the following endpoints:
@@ -42,7 +42,7 @@ The project uses **TimescaleDB**, a PostgreSQL extension optimized for time-seri
 
 - **Time-Series Optimization**: Efficiently handles high-frequency inserts and queries.
 - **Continuous Aggregates**: Precomputes summaries for time windows, reducing computational overhead.
-- **Familiarity**: Built on PostgreSQL, allowing developers to use standard SQL skills.
+- **Familiarity**: Built on PostgreSQL, allowing developers to leverage existing SQL expertise.
 
 ### Schema and Aggregation Strategy
 
@@ -52,7 +52,7 @@ Temperature readings are stored in a `temperatures` table, with continuous aggre
 ```sql
 CREATE MATERIALIZED VIEW avg_temperature_time_interval
 WITH (timescaledb.continuous) AS
-SELECT time_bucket('2 minutes', timestamp) AS bucket, -- Group data into 2-minute intervals
+SELECT time_bucket('2 minutes', timestamp) AS bucket, -- Group data into 15-minute (read 2) intervals
        building_id,
        room_id,
        AVG(temperature) AS avg_temp -- Compute average temperature
@@ -95,17 +95,22 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
      make build
      ```
 
-### Deployment Diagram
+4. **Monitor Pod Status**:
+   - Check the status of all pods to ensure they are running:
+     ```bash
+     kubectl get po
+     ```
+   - Example output when all pods are ready:
+     ```bash
+     NAME                                 READY   STATUS    RESTARTS   AGE
+     acid-minimal-cluster-0               1/1     Running   0          74m
+     iotsimulator-7cddff8495-qb847        2/2     Running   0          74m
+     postgres-operator-69c58b594c-lml2n   1/1     Running   1          75m
+     ```
 
-```plaintext
-+---------------------+
-| Simulation Service  |  --> Sends data to -->
-+---------------------+                      +----------------+
-                                            | API Service    |
-+---------------------+  <-------- Queries--+----------------+
-| TimescaleDB         |  Stores Aggregates |
-+---------------------+
-```
+5. **Access the API**:
+   - API Service: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
+   - The simulation service will automatically generate and ingest temperature data.
 
 ---
 
@@ -125,7 +130,14 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
    - Simulate high-frequency data ingestion.
 
 4. **Integration Tests**:
-   - Would be nice to have them on this project :s
+   - These would be a great addition for end-to-end validation in future iterations.
+
+### Running Tests
+To run tests locally:
+```bash
+poetry install
+poetry run pytest
+```
 
 ---
 
@@ -150,8 +162,9 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
 ### Setup and Deployment
 
 1. Clone the repository:
+   Unzip the provided file.
    ```bash
-   cd IoTSimulation
+   cd IoTSimulation-main
    ```
 
 2. Build and deploy locally:
@@ -159,32 +172,30 @@ The project uses **Kind** (Kubernetes in Docker) for local testing and deploymen
    make build
    ```
 
-3. What for the build process:
-    Once it is finished, by the k8s declarative nature, it will take up to a minute for all pods beging deploy by k8s.
-    run:
-
-    ```bash
-    kubectl get po
-    ```
-    and it will be ready when you see something similar to this:
-    ```bash
-    NAME                                 READY   STATUS    RESTARTS      AGE
-    acid-minimal-cluster-0               1/1     Running   0             74m
-    iotsimulator-7cddff8495-qb847        2/2     Running   0             74m
-    postgres-operator-69c58b594c-lml2n   1/1     Running   1 (74m ago)   75m
-    ```
+3. Monitor pods and ensure all services are running:
+   ```bash
+   kubectl get po
+   ```
 
 4. Access the API:
-   - API Service: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
-   - Temperature data will be simulated and ingested automatically.
+   - API Endpoint: `http://localhost:30080/v1/temperature/average?building_id=B1&room_id=101`
 
+### Check auto-generated API's documentation
+```bash
+http://localhost:30080/docs
+http://localhost:30080/redoc
+```
 
-### Testing locally:
+### Connecting to database:
+Run the k8s port-forward and connect normaly to the database using postgres or timescales's drivers:
+```bash
+kubectl port-forward pod/acid-minimal-cluster-0 5432:5432
+```
 
-    ```bash
-    poetry install
-    poetry run pytest
-    ```
+```bash
+user: postgres
+pass: password
+```
 
 ---
 
