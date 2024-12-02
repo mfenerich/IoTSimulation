@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "iotSimulation"
-version = "0.0.1"
+version = "0.1.0"
 description = "Project to receive events"
 
 authors = ["Marcel Fenerich <marcel@feneri.ch>"]

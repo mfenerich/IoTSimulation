@@ -36,7 +36,7 @@ app = FastAPI(
     - Add temperature data for buildings and rooms.
     - Fetch average temperature data for a specified time range.
     """,
-    version="1.0.0",
+    version="0.1.0",
     terms_of_service="http://example.com/terms/",
     contact={
         "name": "API Support",
